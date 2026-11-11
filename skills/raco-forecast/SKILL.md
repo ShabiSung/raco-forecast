@@ -1,11 +1,11 @@
 ---
 name: raco-forecast
-description: Raco AI 預測：用開源 K 線 AI 模型 Kronos 預測股票、ETF、加密貨幣未來的走勢，並產生互動網頁報告（繁體中文）。使用者提到 Raco、Raco AI 預測、Kronos、「用 AI 預測 K 線／股價走勢」「預測 0050 接下來怎麼走」「用 Raco 預測」「做一份預測報告」時使用。第一次使用會先教學，再帶使用者完成安裝、抓資料、跑預測，最後輸出可分享的 artifact 報告。Use when the user asks for a Raco (Kronos-based) candlestick forecast or report.
+description: Raco 的市場預測 AI：用 AI 模型預測股票、ETF、加密貨幣未來的走勢，並產生互動網頁報告（繁體中文）。使用者提到 Raco、市場預測 AI、「用 AI 預測 K 線／股價走勢」「預測 0050 接下來怎麼走」「用 Raco 預測」「做一份預測報告」時使用。第一次使用會先教學，再帶使用者完成安裝、抓資料、跑預測，最後輸出可分享的 artifact 報告。Use when the user asks for a Raco market forecast or report.
 ---
 
-# Raco AI 預測
+# Raco 的市場預測 AI
 
-Raco AI 預測是課程提供的預測工具，核心是開源的 K 線 AI 模型 Kronos。帶使用者用它預測一檔標的未來的 K 線，最後交出一份互動網頁報告。對使用者稱呼這個工具時用「Raco AI 預測」；講到底層模型時照實說是 Kronos。報告包含：
+Raco 的市場預測 AI 是課程提供的預測工具。帶使用者用它預測一檔標的未來的 K 線，最後交出一份互動網頁報告。對使用者一律稱呼「Raco 的市場預測 AI」，兩個模型版本稱「小模型」（small）和「大模型」（base）。報告包含：
 - 歷史 K 線與成交量
 - 未來每根 K 的中位數，以及 25–75%、10–90% 兩層預測區間
 - 抽樣路徑
@@ -37,7 +37,7 @@ SKILL=$(dirname "$(find ~/.claude -name build_report.py -path '*raco-forecast*' 
 教學的做法：
 - 教學是穿插在操作裡的，不是先講一大段再開始。每一步開始前用 2–4 句話說明在做什麼、為什麼。等待的時間拿來講觀念。
 - 已經用過的人，跳過教學，直接做。
-- 使用者沒講清楚的，只確認三件事：標的、預測長度（預設 20 根）、要不要加跑 Kronos-base。能從對話推斷的就不要問。
+- 使用者沒講清楚的，只確認三件事：標的、預測長度（預設 20 根）、要不要加跑大模型。能從對話推斷的就不要問。
 
 ---
 
@@ -55,7 +55,7 @@ python3 $SKILL/scripts/setup_raco.py --models small   # 只裝 small，比較快
 ```
 
 執行時要注意：
-- 安裝會寫入 `~/.raco-forecast/`，這個腳本可以重複執行。以前裝過舊版（`~/.kronos-forecast/`）的話，腳本會直接搬過來用，不用重新下載。
+- 安裝會寫入 `~/.raco-forecast/`，這個腳本可以重複執行。以前裝過舊版的話，腳本會直接沿用，不用重新下載。腳本最後若提醒有舊版外掛，照它印出的指令移除。
 - 能在背景執行長指令的話就放背景跑，並把進度轉述給使用者。
 - 失敗時看最後幾行錯誤，對照下方的「疑難排解」。
 
@@ -118,20 +118,20 @@ python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
 - **統計 JSON**：腳本會印出一段統計 JSON，回覆時的數字一律從這裡引用，不要自己估。
 
 交付報告：
-1. **有可以發布 artifact 的工具時**（例如 Artifact 工具）：用它發布 `report.html`，標題用「<代號> Raco AI 預測」，圖示用 `chart`，然後把連結給使用者，並提醒要從頁面右上角 Share 開啟公開連結，別人才看得到。
+1. **有可以發布 artifact 的工具時**（例如 Artifact 工具）：用它發布 `report.html`，標題用「<代號>｜Raco 的市場預測 AI」，圖示用 `chart`，然後把連結給使用者，並提醒要從頁面右上角 Share 開啟公開連結，別人才看得到。
 2. **沒有的話**：告訴使用者 `report.html` 的完整路徑，請他用瀏覽器打開（雙擊檔案即可）。檔案是單一 HTML，可以直接傳給別人。
 3. **如果你能看圖**：發布前截一次圖確認圖表正常，有明顯問題修正一次就好。
 
 ## 步驟 6：回覆格式
 
 ```
-**Raco AI 預測：<名稱>（<代號>）未來 <N> 根 <K 線週期>**
+**Raco 的市場預測 AI：<名稱>（<代號>）未來 <N> 根 <K 線週期>**
 **結論：<偏向上漲／偏向下跌／先回測、再反彈／看不出明確方向>**
 
 | | 第 5 根 | 第 10 根 | 第 N 根 | 第 N 根的八成區間 |
 |---|---|---|---|---|
-| Kronos-small（100 條） | … | … | … | …–… |
-| Kronos-base（50 條） | … | … | … | …–… |
+| 小模型（100 條） | … | … | … | …–… |
+| 大模型（50 條） | … | … | … | …–… |
 
 - 收高於最新收盤（xx.xx）的比例：xx%
 - 站上 <壓力價位>：xx%｜過程中曾跌破 <支撐價位>：xx%
@@ -153,6 +153,7 @@ python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
 - **不把比例說成真實機率**：「100 條路徑裡有 84 條收高」不等於「有 84% 機率上漲」。
 - **不做投資決定**：不建議買賣、金額、槓桿。使用者要進出場計畫時，提醒要搭配停損，並說明模型的限制。
 - **尊重資料來源**：不要繞過網站的流量限制，例如偽裝瀏覽器或大量重試。下載失敗就請使用者稍後再試，或改用 CSV。
+- **被問到用什麼模型時照實說**：平常不主動提底層模型。使用者直接問的話，照實回答是開源的 Kronos 模型（MIT 授權），不要否認或編造。
 - **每次都附上限制說明和免責聲明。**
 
 ## 疑難排解
@@ -169,9 +170,9 @@ python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
 
 ## 檔案
 
-- `scripts/setup_raco.py`：安裝執行環境（Kronos 原始碼、PyTorch 與模型），並做測試預測
+- `scripts/setup_raco.py`：安裝執行環境（PyTorch、模型程式碼與權重），並做測試預測
 - `scripts/fetch_data.py`：下載或整理 K 線資料，輸出標準 CSV；台股會自動還原股票分割
-- `scripts/forecast.py`：用 Kronos 產生抽樣路徑
+- `scripts/forecast.py`：產生抽樣路徑
 - `scripts/build_report.py`：把結果做成互動 HTML 報告，並輸出統計 JSON
 - `assets/report_template.html`：報告樣板
 - `references/teaching.md`：第一次使用的教學腳本

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""下載或整理 K 線資料，輸出 Raco AI 預測（Kronos 模型）用的標準 CSV（只用 Python 標準函式庫）。
+"""下載或整理 K 線資料，輸出 Raco 的市場預測 AI 用的標準 CSV（只用 Python 標準函式庫）。
 
 輸出欄位：timestamps,open,high,low,close,volume,amount
 

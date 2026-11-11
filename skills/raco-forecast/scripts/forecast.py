@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""用 Kronos 產生未來 K 線的抽樣路徑。
+"""產生未來 K 線的抽樣路徑（Raco 的市場預測 AI）。
 
 請用 setup_raco.py 建好的 Python 執行（路徑記在 ~/.raco-forecast/config.json 的 "python"）：
   <config 裡的 python> forecast.py --data data.csv --pred-len 20 --models small,base --samples 100,50 -o result.json
 
 每條路徑都是模型「擲一次骰子」得到的一種可能走勢；路徑越多，區間越穩定，但也越久。
-CPU 參考時間（225 根日 K、預測 20 根）：Kronos-small 100 條約 3–6 分鐘，Kronos-base 50 條約 8–15 分鐘。
+CPU 參考時間（225 根日 K、預測 20 根）：小模型 100 條約 3–6 分鐘，大模型 50 條約 8–15 分鐘。
 """
 import argparse
 import json
@@ -15,9 +15,9 @@ import time
 
 CONFIG = os.path.join(os.path.expanduser("~"), ".raco-forecast", "config.json")
 if not os.path.exists(CONFIG):
-    sys.exit("找不到 Raco AI 預測的安裝設定。請先執行 setup_raco.py。")
+    sys.exit("找不到 Raco 的市場預測 AI 的安裝設定。請先執行 setup_raco.py。")
 CFG = json.load(open(CONFIG, encoding="utf-8"))
-sys.path.insert(0, CFG["kronos_dir"])
+sys.path.insert(0, CFG.get("engine_dir") or CFG["kronos_dir"])   # kronos_dir：舊版設定
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -26,6 +26,7 @@ from model import Kronos, KronosPredictor, KronosTokenizer  # noqa: E402
 
 REPOS = {"small": "NeoQuasar/Kronos-small", "base": "NeoQuasar/Kronos-base"}
 TOKENIZER = "NeoQuasar/Kronos-Tokenizer-base"
+LABELS = {"small": "小模型", "base": "大模型"}
 
 
 def future_times(ts, n):
@@ -92,7 +93,7 @@ def main():
             "last": ctx["timestamps"].iloc[-1].strftime("%Y-%m-%d %H:%M"),
             "last_close": float(ctx["close"].iloc[-1]), "interval": interval, "pred_len": a.pred_len,
             "temperature": a.temperature, "top_p": a.top_p, "device": device,
-            "kronos_commit": CFG.get("kronos_commit", ""), "created": time.strftime("%Y-%m-%d %H:%M"),
+            "engine_commit": CFG.get("engine_commit") or CFG.get("kronos_commit", ""), "created": time.strftime("%Y-%m-%d %H:%M"),
         },
         "dates": [t.strftime("%Y-%m-%d %H:%M") for t in fut],
         "models": {},
@@ -110,12 +111,12 @@ def main():
             paths += [[sig(v) for v in o["close"].tolist()] for o in outs]
             el = time.time() - t0
             eta = el / len(paths) * (n - len(paths))
-            print(f"Kronos-{name}: {len(paths)}/{n} 條（已用 {el:.0f} 秒，約剩 {eta:.0f} 秒）", flush=True)
+            print(f"{LABELS[name]}：{len(paths)}/{n} 條（已用 {el:.0f} 秒，約剩 {eta:.0f} 秒）", flush=True)
         result["models"][name] = {"samples": n, "seconds": round(time.time() - t0), "close": paths}
         with open(a.out, "w", encoding="utf-8") as f:       # 每個模型跑完就先存檔
             json.dump(result, f, ensure_ascii=False, separators=(",", ":"))
         end = sorted(p[-1] for p in paths)
-        print(f"Kronos-{name} 完成：第 {a.pred_len} 根中位數 {end[len(end) // 2]:.4g}", flush=True)
+        print(f"{LABELS[name]}完成：第 {a.pred_len} 根中位數 {end[len(end) // 2]:.4g}", flush=True)
     print(json.dumps({"out": a.out, "models": {m: v["samples"] for m, v in result["models"].items()},
                       "last_close": result["meta"]["last_close"], "interval": interval}, ensure_ascii=False))
 

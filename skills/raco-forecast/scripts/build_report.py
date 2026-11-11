@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把 Raco AI 預測（Kronos 模型）的結果做成互動網頁報告（單一 HTML 檔，可直接發布成 artifact 或用瀏覽器打開）。
+"""把 Raco 的市場預測 AI 的預測結果做成互動網頁報告（單一 HTML 檔，可直接發布成 artifact 或用瀏覽器打開）。
 
 只用 Python 標準函式庫：
   python3 build_report.py --data data.csv --result result.json --name 元大台灣50 --symbol 0050 \
@@ -129,7 +129,7 @@ def main():
         lead, phrase = "", "看不出明確方向"
     headline = a.headline or f"未來 {n} {unit_word}，模型{lead}<em>{phrase}</em>"
     sp = " " if interval_label[0].isdigit() else ""
-    lede = a.lede or (f"Raco AI 預測使用專門讀 K 線的開源模型 Kronos。它看完{a.name}（{a.symbol}）最近 {meta['bars_used']} 根{sp}{interval_label}，"
+    lede = a.lede or (f"Raco 的市場預測 AI 專門讀 K 線。它看完{a.name}（{a.symbol}）最近 {meta['bars_used']} 根{sp}{interval_label}，"
                       f"產生 {len(pooled)} 條「可能的未來」，下面的圖把這些路徑整理成區間。每條路徑都只是一種可能，不是預言。")
     hist = rows[-a.hist_bars:]
     first_d, last_d = meta["first"][:10].replace("-", "/"), meta["last"][:10].replace("-", "/")
@@ -139,12 +139,12 @@ def main():
         "bars": meta["bars_used"], "levels": [{"p": p, "label": t} for p, t in levels],
         "headline": headline, "lede": lede, "temperature": meta["temperature"], "top_p": meta["top_p"],
         "created": meta["created"],
-        "eyebrow": f"{a.name}（{a.symbol}）‧Raco AI 預測‧{interval_label}‧資料截至 {meta['last'][:16] if 'd' not in meta['interval'] else last_d}",
+        "eyebrow": f"{a.name}（{a.symbol}）‧Raco 的市場預測 AI‧{interval_label}‧資料截至 {meta['last'][:16] if 'd' not in meta['interval'] else last_d}",
     }
     data = {"hist": [[r[0][:16]] + [round(x, 6) for x in r[1:]] for r in hist], "dates": res["dates"], "paths": paths}
     dump = lambda o: json.dumps(o, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     page = open(TEMPLATE, encoding="utf-8").read()
-    page = page.replace("__TITLE__", html.escape(f"{a.symbol} Raco AI 預測"), 1)
+    page = page.replace("__TITLE__", html.escape(f"{a.symbol}｜Raco 的市場預測 AI"), 1)
     page = page.replace("__CFG__", dump(cfg), 1).replace("__DATA__", dump(data), 1)
     with open(a.out, "w", encoding="utf-8") as f:
         f.write(page)

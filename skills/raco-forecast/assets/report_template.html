@@ -159,7 +159,7 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
   const LAST = D.hist[D.hist.length - 1][4];
   const daily = C.interval.indexOf("1d") === 0;
   const LEVELS = (C.levels || []).map(function (L, i) { return { p: L.p, label: L.label, cls: "abcd"[i % 4] }; });
-  const NAMES = { small: "Kronos-small", base: "Kronos-base" };
+  const NAMES = { small: "小模型", base: "大模型" };
   const MODELS = {};
   const keys = Object.keys(D.paths);
   if (keys.length > 1) {
@@ -270,7 +270,7 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
     const pad = (hi - lo) * 0.04; lo -= pad; hi += pad;
     const priceBottom = m.t + ph - volH - 6;
     const Y = function (v) { return m.t + (hi - v) / (hi - lo) * (priceBottom - m.t); };
-    const svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": C.name + " K 線與 Raco AI 預測區間" });
+    const svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": C.name + " K 線與預測區間" });
     const ts = niceStep(hi - lo), tdec = Math.max(0, -Math.floor(Math.log10(ts)));
     for (let v = Math.ceil(lo / ts) * ts; v <= hi; v += ts) {
       svg.appendChild(el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), class: "grid" }));
@@ -367,9 +367,9 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
   const mdesc = keys.map(function (k) { return (NAMES[k] || k) + " " + D.paths[k].length + " 條"; }).join("、");
   document.getElementById("method").innerHTML =
     "<div>資料：" + esc(C.sourceLabel) + "，" + esc(C.dataRange) + "，共 " + C.bars + " 根" + (/^\d/.test(C.intervalLabel) ? " " : "") + esc(C.intervalLabel) + "。預測接下來 " + D.dates.length + " 根（" + lab(D.dates[0]) + "–" + lab(D.dates[D.dates.length - 1]) + "）。</div>" +
-    "<div>模型：" + esc(mdesc) + " 抽樣路徑（Tokenizer-base，T = " + C.temperature + "，top_p = " + C.top_p + "），於 " + esc(C.created) + " 產生。</div>" +
+    "<div>模型：" + esc(mdesc) + " 抽樣路徑（T = " + C.temperature + "，top_p = " + C.top_p + "），於 " + esc(C.created) + " 產生。</div>" +
     (LEVELS.length ? "<div>關鍵價位：" + LEVELS.map(function (L) { return fp(L.p) + " " + esc(L.label); }).join("；") + "。</div>" : "") +
-    '<div>報告產生工具：<a href="https://github.com/ShabiSung/raco-forecast" target="_blank" rel="noopener">Raco AI 預測</a>‧預測模型：<a href="https://github.com/shiyu-coder/Kronos" target="_blank" rel="noopener">Kronos</a>（開源，MIT 授權）</div>' +
+    '<div>報告產生工具：<a href="https://github.com/ShabiSung/raco-forecast" target="_blank" rel="noopener">Raco 的市場預測 AI</a></div>' +
     '<p class="disclaimer">本頁為 AI 模型研究與教學示範，不構成任何投資建議。模型預測可能完全錯誤，交易前請自行評估風險並設定停損。</p>';
   if (!LEVELS.length) document.getElementById("t-levels-wrap").hidden = true;
 

@@ -1,6 +1,6 @@
 {
   "name": "raco-forecast",
-  "version": "1.1.0",
-  "description": "Raco AI 預測：用開源 K 線 AI 模型 Kronos 預測股票、ETF、加密貨幣走勢，Claude 會先教學，再產生互動網頁報告",
+  "version": "1.2.0",
+  "description": "Raco 的市場預測 AI：預測股票、ETF、加密貨幣走勢，Claude 會先教學，再產生互動網頁報告",
   "author": { "name": "ShabiSung" }
 }

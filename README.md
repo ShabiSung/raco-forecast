@@ -1,10 +1,10 @@
-# Raco AI 預測（raco-forecast）
+# Raco 的市場預測 AI（raco-forecast）
 
-給 Claude Code 用的 Skill。以開源的 K 線 AI 模型 [Kronos](https://github.com/shiyu-coder/Kronos) 為核心，預測股票、ETF、加密貨幣未來的走勢，最後產生一份互動網頁報告。
+給 Claude Code 用的 Skill。用專門讀 K 線的 AI 模型預測股票、ETF、加密貨幣未來的走勢，最後產生一份互動網頁報告。
 
 裝好之後，只要對 Claude 說「用 Raco 預測 0050」：
 
-1. **先教學**：第一次使用時，Claude 會邊做邊解釋這個工具和背後的 Kronos 模型、怎麼看預測區間、模型有哪些限制。
+1. **先教學**：第一次使用時，Claude 會邊做邊解釋 AI 怎麼預測、怎麼看預測區間、模型有哪些限制。
 2. **自動完成**：安裝環境、下載資料、跑預測，全部由 Claude 處理。
 3. **產生報告**：輸出互動網頁報告，可以切換模型、看每天的預測區間、關鍵價位和統計數字。能發布 artifact 時，會直接給你分享連結。
 
@@ -26,7 +26,7 @@
 開啟 Claude Code，貼上這段話：
 
 ```
-請幫我安裝 Raco AI 預測工具：https://github.com/ShabiSung/raco-forecast
+請幫我安裝 Raco 的市場預測 AI：https://github.com/ShabiSung/raco-forecast
 照 README 裡「給 AI 的安裝步驟」做，裝好後教我怎麼用。
 ```
 
@@ -41,7 +41,7 @@ Claude 會完成安裝並帶你跑第一次預測。第一次大約要 10–20 �
 ```
 
 ```
-用 Raco 預測 BTCUSDT 的 4 小時 K，接下來 30 根，small 和 base 兩個模型都跑。
+用 Raco 預測 BTCUSDT 的 4 小時 K，接下來 30 根，大模型和小模型都跑。
 ```
 
 ```
@@ -67,13 +67,13 @@ Claude 會完成安裝並帶你跑第一次預測。第一次大約要 10–20 �
   - 站上壓力價位的比例
   - 過程中曾跌破支撐價位的比例
 - **互動功能**：
-  - 切換 Kronos-small、Kronos-base 或兩者合併
+  - 切換小模型、大模型或兩者合併
   - 滑鼠移到圖上看每一根的數字
   - 切換紅漲綠跌和綠漲紅跌
 
 ## 使用前要知道
 
-- **只看價量**：Kronos 只看價格和成交量，不知道新聞、財報和突發事件。
+- **只看價量**：模型只看價格和成交量，不知道新聞、財報和突發事件。
 - **比例不是機率**：報告的百分比是「抽樣路徑裡有幾條這樣走」，不是校準過的真實機率。
 - **沒有保證準確**：預測可能完全錯誤，請當作第二意見，搭配技術面與停損一起使用。
 
@@ -93,7 +93,6 @@ claude plugin install raco-forecast@raco
 ```
 
 - 已經加過這個 marketplace 的話，先執行 `claude plugin marketplace update raco`。
-- 以前裝過舊版 `kronos-forecast` 的話，先執行 `claude plugin uninstall kronos-forecast@kline-course` 移除，避免裝兩份。
 
 **方式 B：直接複製到個人 skills 資料夾**（方式 A 失敗時）
 
@@ -123,7 +122,7 @@ Copy-Item -Recurse "$env:TEMP\raco-forecast\skills\raco-forecast" "$HOME\.claude
 - 方式 A：在 `~/.claude/plugins/` 底下
 - 方式 B：在 `~/.claude/skills/raco-forecast`
 
-然後執行安裝腳本。它會在 `~/.raco-forecast/` 建立虛擬環境、下載 Kronos 原始碼和模型，最後跑一次測試預測。以前裝過舊版（`~/.kronos-forecast/`）的話，會直接搬過來用，不用重新下載。
+然後執行安裝腳本。它會在 `~/.raco-forecast/` 建立虛擬環境、下載模型程式碼和權重，最後跑一次測試預測。以前裝過舊版的話，會直接沿用，不用重新下載。
 
 ```bash
 SKILL=$(dirname "$(find ~/.claude -name setup_raco.py -path '*raco-forecast*' | head -1)")/..
@@ -135,6 +134,7 @@ Windows 把 `python3` 換成 `py`。
 - 這一步要 5–15 分鐘，能放背景執行就放背景，並向使用者回報進度。
 - 看到「測試預測 OK」和「安裝完成」就代表成功。
 - 失敗時參考 SKILL.md 的「疑難排解」。
+- 腳本最後若提醒有舊版外掛，照它印出的指令移除。
 
 ### 3. 告訴使用者
 
@@ -151,7 +151,7 @@ Windows 把 `python3` 換成 `py`。
 skills/raco-forecast/
   SKILL.md                       操作流程與回覆格式
   references/teaching.md         第一次使用的教學腳本
-  scripts/setup_raco.py        安裝 Kronos、PyTorch 與模型
+  scripts/setup_raco.py        安裝 PyTorch 與模型
   scripts/fetch_data.py          下載或整理 K 線資料
   scripts/forecast.py            產生抽樣路徑
   scripts/build_report.py        產生互動 HTML 報告
@@ -160,10 +160,9 @@ docs/example-report.png          報告範例截圖
 docs/example-report.html         報告範例（可用瀏覽器打開）
 ```
 
-## 授權與致謝
+## 資料來源
 
-- Kronos 模型與原始碼由 [shiyu-coder/Kronos](https://github.com/shiyu-coder/Kronos) 提供，採 MIT 授權。本工具不包含 Kronos 的程式碼，安裝時才從原專案下載。
-- 台股資料來自臺灣證券交易所公開資訊，加密貨幣資料來自 Binance 公開 API，美股資料來自 Yahoo 財經。使用時請遵守各網站的使用規範。
+台股資料來自臺灣證券交易所公開資訊，加密貨幣資料來自 Binance 公開 API，美股資料來自 Yahoo 財經。使用時請遵守各網站的使用規範。
 
 ## 免責聲明
 
