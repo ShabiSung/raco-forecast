@@ -1,0 +1,404 @@
+<title>__TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: one column instrument page — verdict header, chart with live readout, stat strip, two note columns, method footer. */
+:root {
+  --bg: #f2f4f7; --surface: #ffffff; --ink: #16212c; --muted: #5c6a77; --line: #dfe4ea; --grid: #ebeef2;
+  --accent: #2e58cf; --band-wide: rgba(46, 88, 207, 0.12); --band-mid: rgba(46, 88, 207, 0.24); --path: rgba(46, 88, 207, 0.20);
+  --lv-a: #b06f12; --lv-b: #c23b2f; --lv-c: #6a7684; --lv-d: #0f8a8a;
+  --red: #d4433a; --green: #138a59; --chip: #e8edf8;
+  --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1218; --surface: #141b23; --ink: #e3e8ee; --muted: #93a0ad; --line: #26303b; --grid: #1c252f;
+    --accent: #7fa2ff; --band-wide: rgba(127, 162, 255, 0.13); --band-mid: rgba(127, 162, 255, 0.27); --path: rgba(127, 162, 255, 0.24);
+    --lv-a: #e2a54a; --lv-b: #f06b5f; --lv-c: #8c98a5; --lv-d: #3fc6c6; --red: #f0625a; --green: #2fbf86; --chip: #1d2735;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1218; --surface: #141b23; --ink: #e3e8ee; --muted: #93a0ad; --line: #26303b; --grid: #1c252f;
+  --accent: #7fa2ff; --band-wide: rgba(127, 162, 255, 0.13); --band-mid: rgba(127, 162, 255, 0.27); --path: rgba(127, 162, 255, 0.24);
+  --lv-a: #e2a54a; --lv-b: #f06b5f; --lv-c: #8c98a5; --lv-d: #3fc6c6; --red: #f0625a; --green: #2fbf86; --chip: #1d2735;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.65; }
+.wrap {
+  max-width: 1080px; margin: 0 auto; padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 22px;
+}
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-size: 12.5px; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; }
+h1 { margin: 0; font-size: clamp(24px, 4.2vw, 36px); font-weight: 900; line-height: 1.25; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--accent); }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+h2 { margin: 0 0 8px; font-size: 17px; font-weight: 700; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13.5px; padding: 6px 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--chip); color: var(--ink); font-weight: 700; }
+.seg button:focus-visible, .toggle input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--muted); cursor: pointer; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+.readout { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; min-height: 28px; font-size: 13.5px; color: var(--muted); border-bottom: 1px dashed var(--line); padding-bottom: 8px; }
+.readout b { color: var(--ink); font-weight: 700; }
+.readout .tag { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--ink); }
+.readout .tag.fc { color: var(--accent); }
+#chart { width: 100%; min-width: 0; touch-action: pan-y; }
+#chart svg { display: block; width: 100%; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 18px; height: 10px; border-radius: 2px; display: inline-block; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; align-content: start; }
+.stat .k { font-size: 13px; color: var(--muted); }
+.stat .v { font-family: var(--font-num); font-size: 28px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat .s { font-size: 12.5px; color: var(--muted); }
+.stat .v.up { color: var(--accent); }
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.notes ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.notes li { max-width: 60ch; }
+.method { font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+.method a { color: var(--accent); }
+.disclaimer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; margin: 8px 0 0; }
+svg text { font-family: var(--font-num); font-size: 11px; }
+svg .t-muted { fill: var(--muted); }
+svg .t-accent { fill: var(--accent); font-weight: 600; }
+svg .t-cjk { font-family: var(--font-sans); }
+svg .t-a { fill: var(--lv-a); font-weight: 600; } svg .t-b { fill: var(--lv-b); font-weight: 600; }
+svg .t-c { fill: var(--lv-c); font-weight: 600; } svg .t-d { fill: var(--lv-d); font-weight: 600; }
+svg .lv-a { stroke: var(--lv-a); } svg .lv-b { stroke: var(--lv-b); } svg .lv-c { stroke: var(--lv-c); } svg .lv-d { stroke: var(--lv-d); }
+svg .lv { stroke-width: 1.3; stroke-dasharray: 6 4; }
+svg .grid { stroke: var(--grid); stroke-width: 1; }
+svg .axis { stroke: var(--line); stroke-width: 1; }
+svg .divider { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.7; }
+svg .cross { stroke: var(--muted); stroke-width: 1; opacity: 0.6; }
+#chart[data-conv="tw"] { --up-c: var(--red); --down-c: var(--green); }
+#chart[data-conv="us"] { --up-c: var(--green); --down-c: var(--red); }
+svg .c-up { fill: var(--up-c); stroke: var(--up-c); }
+svg .c-down { fill: var(--down-c); stroke: var(--down-c); }
+svg .vol-up { fill: var(--up-c); opacity: 0.35; }
+svg .vol-down { fill: var(--down-c); opacity: 0.35; }
+svg .band-wide { fill: var(--band-wide); }
+svg .band-mid { fill: var(--band-mid); }
+svg .median { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linejoin: round; }
+svg .path { fill: none; stroke: var(--path); stroke-width: 1; }
+svg .dot { fill: var(--accent); }
+svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+@media (max-width: 760px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .notes { grid-template-columns: 1fr; }
+  .stat .v { font-size: 24px; }
+}
+@media (prefers-reduced-motion: no-preference) { .seg button { transition: background-color 0.15s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="headline"></h1>
+    <p class="lede" id="lede"></p>
+  </header>
+
+  <section class="panel" aria-label="預測圖">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="選擇模型" id="model-seg"></div>
+      <label class="toggle"><input type="checkbox" id="t-paths" checked> 顯示抽樣路徑</label>
+      <label class="toggle" id="t-levels-wrap"><input type="checkbox" id="t-levels" checked> 顯示關鍵價位</label>
+      <div class="seg" role="group" aria-label="K 棒顏色">
+        <button type="button" id="c-tw" data-conv="tw" aria-pressed="false">紅漲綠跌</button>
+        <button type="button" id="c-us" data-conv="us" aria-pressed="false">綠漲紅跌</button>
+      </div>
+    </div>
+    <div class="readout" id="readout" aria-live="polite"></div>
+    <div id="chart"></div>
+    <div class="legend">
+      <span><i class="sw" style="background: var(--accent); height: 3px"></i>中位數</span>
+      <span><i class="sw" style="background: var(--band-mid)"></i>一半路徑落在這裡（25–75%）</span>
+      <span><i class="sw" style="background: var(--band-wide)"></i>八成路徑落在這裡（10–90%）</span>
+      <span><i class="sw" style="background: var(--path); height: 2px"></i>單條抽樣路徑</span>
+    </div>
+  </section>
+
+  <section class="stats" id="stats" aria-label="預測統計"></section>
+
+  <section class="notes">
+    <div class="panel">
+      <h2>怎麼讀這張圖</h2>
+      <ul>
+        <li>藍線是所有路徑每天的中位數，代表「最典型」的走法，不代表一定會這樣走。</li>
+        <li>色帶越寬，模型越沒把握。切換不同模型比較看看，意見不一致時要更保守。</li>
+        <li>看「過程中曾跌破」那一格：最後收高和中途先跌，兩件事可以同時發生。</li>
+        <li>滑鼠移到圖上（手機用手指點），上方會顯示那一根 K 的價格或預測區間。</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>模型看不到的事</h2>
+      <ul id="limits"></ul>
+    </div>
+  </section>
+
+  <footer class="method" id="method"></footer>
+</div>
+
+<script id="cfg" type="application/json">__CFG__</script>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function () {
+  const C = JSON.parse(document.getElementById("cfg").textContent);
+  const D = JSON.parse(document.getElementById("data").textContent);
+  const LAST = D.hist[D.hist.length - 1][4];
+  const daily = C.interval.indexOf("1d") === 0;
+  const LEVELS = (C.levels || []).map(function (L, i) { return { p: L.p, label: L.label, cls: "abcd"[i % 4] }; });
+  const NAMES = { small: "Kronos-small", base: "Kronos-base" };
+  const MODELS = {};
+  const keys = Object.keys(D.paths);
+  if (keys.length > 1) {
+    let all = [];
+    keys.forEach(function (k) { all = all.concat(D.paths[k]); });
+    MODELS.all = { name: "合併 " + all.length + " 條", paths: all };
+  }
+  keys.forEach(function (k) { MODELS[k] = { name: (NAMES[k] || k) + "（" + D.paths[k].length + " 條）", paths: D.paths[k] }; });
+  const WD = "日一二三四五六";
+  const state = { model: Object.keys(MODELS)[0], paths: true, levels: LEVELS.length > 0, conv: C.conv, hover: null };
+  const chartEl = document.getElementById("chart");
+  const readout = document.getElementById("readout");
+  const statsEl = document.getElementById("stats");
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function dec(v) { const a = Math.abs(v); return a >= 10000 ? 0 : a >= 1000 ? 1 : a >= 1 ? 2 : a >= 0.01 ? 4 : 6; }
+  const DEC = dec(LAST);
+  function fp(v) { return v.toFixed(DEC); }
+  function fv(v) {
+    if (C.volUnit === "lots") { const lots = v / 1000; return lots >= 10000 ? (lots / 10000).toFixed(1) + " 萬張" : Math.round(lots) + " 張"; }
+    return v >= 1e9 ? (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? (v / 1e6).toFixed(2) + "M" : v >= 1e3 ? (v / 1e3).toFixed(1) + "K" : v.toFixed(0);
+  }
+  function parse(s) { return new Date(s.replace(" ", "T")); }
+  function lab(s) {
+    const d = parse(s);
+    const md = (d.getMonth() + 1) + "/" + String(d.getDate()).padStart(2, "0");
+    return daily ? md : md + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function labLong(s) { return daily ? lab(s) + "（" + WD[parse(s).getDay()] + "）" : lab(s); }
+  function pct(sorted, q) { const pos = (sorted.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos); return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo); }
+  const pctTxt = function (v) { return Math.round(v * 100) + "%"; };
+
+  function summarize(paths) {
+    const days = D.dates.length, q = { p10: [], p25: [], p50: [], p75: [], p90: [] };
+    for (let d = 0; d < days; d++) {
+      const col = paths.map(function (p) { return p[d]; }).sort(function (a, b) { return a - b; });
+      q.p10.push(pct(col, 0.1)); q.p25.push(pct(col, 0.25)); q.p50.push(pct(col, 0.5)); q.p75.push(pct(col, 0.75)); q.p90.push(pct(col, 0.9));
+    }
+    q.n = paths.length;
+    q.endAbove = function (lv) { return paths.filter(function (p) { return p[days - 1] > lv; }).length / paths.length; };
+    q.anyBelow = function (lv) { return paths.filter(function (p) { return Math.min.apply(null, p) < lv; }).length / paths.length; };
+    return q;
+  }
+
+  function renderStats(q) {
+    const n = D.dates.length, med = q.p50[n - 1], chg = (med / LAST - 1) * 100;
+    const above = LEVELS.filter(function (L) { return L.p > LAST; }).sort(function (a, b) { return a.p - b.p; })[0];
+    const below = LEVELS.filter(function (L) { return L.p < LAST; }).sort(function (a, b) { return b.p - a.p; })[0];
+    const up = above ? above.p : LAST * 1.05, dn = below ? below.p : LAST * 0.95;
+    const items = [
+      { k: "第 " + n + " 根的中位數（" + lab(D.dates[n - 1]) + "）", v: fp(med), up: true,
+        s: (chg >= 0 ? "+" : "−") + Math.abs(chg).toFixed(1) + "%，八成落在 " + fp(q.p10[n - 1]) + "–" + fp(q.p90[n - 1]) },
+      { k: "第 " + n + " 根收高於 " + fp(LAST), v: pctTxt(q.endAbove(LAST)), s: "最新收盤 " + fp(LAST) + "（" + lab(D.hist[D.hist.length - 1][0]) + "）" },
+      { k: "第 " + n + " 根收在 " + fp(up) + " 之上", v: pctTxt(q.endAbove(up)), s: above ? esc(above.label) : "比最新收盤高 5%" },
+      { k: "過程中曾收盤跌破 " + fp(dn), v: pctTxt(q.anyBelow(dn)), s: below ? esc(below.label) : "比最新收盤低 5%" },
+    ];
+    statsEl.innerHTML = items.map(function (it) {
+      return '<div class="stat"><div class="k">' + it.k + '</div><div class="v' + (it.up ? " up" : "") + '">' + it.v + '</div><div class="s">' + it.s + "</div></div>";
+    }).join("");
+  }
+
+  function setReadout(i, q) {
+    const nh = D.hist.length;
+    if (i == null) i = nh + D.dates.length - 1;
+    if (i < nh) {
+      const h = D.hist[i], chg = i > 0 ? h[4] - D.hist[i - 1][4] : 0;
+      readout.innerHTML = '<span class="tag">實際</span><b class="num">' + labLong(h[0]) + "</b>" +
+        '<span class="num">開 ' + fp(h[1]) + '</span><span class="num">高 ' + fp(h[2]) + '</span><span class="num">低 ' + fp(h[3]) +
+        '</span><span class="num">收 <b>' + fp(h[4]) + "</b>（" + (chg >= 0 ? "+" : "−") + Math.abs(chg).toFixed(DEC) + "）</span>" +
+        '<span class="num">量 ' + fv(h[5]) + "</span>";
+    } else {
+      const d = i - nh, s = D.dates[d];
+      readout.innerHTML = '<span class="tag fc">預測第 ' + (d + 1) + ' 根</span><b class="num">' + labLong(s) + "</b>" +
+        '<span>中位數 <b class="num">' + fp(q.p50[d]) + "</b></span>" +
+        '<span>一半路徑 <span class="num">' + fp(q.p25[d]) + "–" + fp(q.p75[d]) + "</span></span>" +
+        '<span>八成路徑 <span class="num">' + fp(q.p10[d]) + "–" + fp(q.p90[d]) + "</span></span>" +
+        "<span>" + MODELS[state.model].name + "</span>";
+    }
+  }
+
+  function el(tag, attrs, text) {
+    const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function niceStep(range) {
+    const raw = range / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+    return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+  }
+
+  function render() {
+    const q = summarize(MODELS[state.model].paths);
+    renderStats(q);
+    const W = Math.max(300, chartEl.clientWidth), narrow = W < 620, H = narrow ? 340 : 430;
+    const histShow = Math.min(D.hist.length, narrow ? 30 : 60);
+    const hist = D.hist.slice(D.hist.length - histShow), off = D.hist.length - histShow;
+    const nF = D.dates.length, N = hist.length + nF;
+    const m = { l: 6, r: narrow ? 50 : 64, t: 12, b: 26 }, volH = narrow ? 34 : 48;
+    const pw = W - m.l - m.r, ph = H - m.t - m.b, step = pw / N;
+    const X = function (i) { return m.l + step * (i + 0.5); };
+    let lo = Infinity, hi = -Infinity;
+    hist.forEach(function (h) { lo = Math.min(lo, h[3]); hi = Math.max(hi, h[2]); });
+    q.p10.forEach(function (v) { lo = Math.min(lo, v); });
+    q.p90.forEach(function (v) { hi = Math.max(hi, v); });
+    if (state.paths) MODELS[state.model].paths.forEach(function (p) { p.forEach(function (v) { lo = Math.min(lo, v); hi = Math.max(hi, v); }); });
+    if (state.levels) LEVELS.forEach(function (L) { lo = Math.min(lo, L.p); hi = Math.max(hi, L.p); });
+    const pad = (hi - lo) * 0.04; lo -= pad; hi += pad;
+    const priceBottom = m.t + ph - volH - 6;
+    const Y = function (v) { return m.t + (hi - v) / (hi - lo) * (priceBottom - m.t); };
+    const svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": C.name + " K 線與 Raco AI 預測區間" });
+    const ts = niceStep(hi - lo), tdec = Math.max(0, -Math.floor(Math.log10(ts)));
+    for (let v = Math.ceil(lo / ts) * ts; v <= hi; v += ts) {
+      svg.appendChild(el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), class: "grid" }));
+      svg.appendChild(el("text", { x: m.l + pw + 6, y: Y(v) + 4, class: "t-muted" }, v.toFixed(tdec)));
+    }
+    const vmax = Math.max.apply(null, hist.map(function (h) { return h[5]; })) || 1;
+    hist.forEach(function (h, i) {
+      const vh = h[5] / vmax * volH;
+      svg.appendChild(el("rect", { x: X(i) - step * 0.32, y: m.t + ph - vh, width: Math.max(1, step * 0.64), height: vh, class: h[4] >= h[1] ? "vol-up" : "vol-down" }));
+    });
+    svg.appendChild(el("text", { x: m.l + 2, y: m.t + ph - volH - 1, class: "t-muted t-cjk" }, "成交量"));
+    hist.forEach(function (h, i) {
+      const cls = h[4] >= h[1] ? "c-up" : "c-down", x = X(i);
+      svg.appendChild(el("line", { x1: x, x2: x, y1: Y(h[2]), y2: Y(h[3]), class: cls, "stroke-width": 1 }));
+      const top = Y(Math.max(h[1], h[4])), bot = Y(Math.min(h[1], h[4]));
+      svg.appendChild(el("rect", { x: x - step * 0.34, y: top, width: Math.max(1.5, step * 0.68), height: Math.max(1, bot - top), class: cls }));
+    });
+    const xDiv = m.l + step * hist.length;
+    svg.appendChild(el("line", { x1: xDiv, x2: xDiv, y1: m.t, y2: m.t + ph, class: "divider" }));
+    svg.appendChild(el("text", { x: xDiv + 6, y: m.t + 12, class: "t-muted t-cjk" }, "預測 →"));
+    const lastX = X(hist.length - 1);
+    function bandPath(a, b) {
+      let d = "M" + lastX + "," + Y(LAST);
+      for (let k = 0; k < nF; k++) d += "L" + X(hist.length + k) + "," + Y(a[k]);
+      for (let k = nF - 1; k >= 0; k--) d += "L" + X(hist.length + k) + "," + Y(b[k]);
+      return d + "Z";
+    }
+    svg.appendChild(el("path", { d: bandPath(q.p90, q.p10), class: "band-wide" }));
+    svg.appendChild(el("path", { d: bandPath(q.p75, q.p25), class: "band-mid" }));
+    if (state.paths) {
+      const ps = MODELS[state.model].paths, every = Math.max(1, Math.floor(ps.length / 40));
+      for (let j = 0; j < ps.length; j += every) {
+        let d = "M" + lastX + "," + Y(LAST);
+        ps[j].forEach(function (v, k) { d += "L" + X(hist.length + k) + "," + Y(v); });
+        svg.appendChild(el("path", { d: d, class: "path" }));
+      }
+    }
+    let dm = "M" + lastX + "," + Y(LAST);
+    q.p50.forEach(function (v, k) { dm += "L" + X(hist.length + k) + "," + Y(v); });
+    svg.appendChild(el("path", { d: dm, class: "median" }));
+    const endX = X(N - 1), endY = Y(q.p50[nF - 1]);
+    svg.appendChild(el("circle", { cx: endX, cy: endY, r: 3.5, class: "dot" }));
+    svg.appendChild(el("text", { x: endX - 6, y: endY - 8, "text-anchor": "end", class: "t-accent halo" }, fp(q.p50[nF - 1])));
+    if (state.levels) {
+      LEVELS.forEach(function (L) {
+        svg.appendChild(el("line", { x1: m.l, x2: m.l + pw, y1: Y(L.p), y2: Y(L.p), class: "lv lv-" + L.cls }));
+        svg.appendChild(el("text", { x: m.l + 4, y: Y(L.p) - 4, class: "t-" + L.cls + " t-cjk halo" }, fp(L.p) + " " + L.label));
+      });
+    }
+    const xl = [];
+    for (let i = 0; i < hist.length; i += narrow ? 10 : 15) xl.push([i, hist[i][0]]);
+    xl.push([hist.length - 1, hist[hist.length - 1][0]]);
+    xl.push([N - 1, D.dates[nF - 1]]);
+    let lastLabelX = -Infinity;
+    const gapNeeded = daily ? 40 : 76;
+    xl.forEach(function (p) {
+      const x = X(p[0]);
+      if (x - lastLabelX < gapNeeded) return;
+      lastLabelX = x;
+      svg.appendChild(el("text", { x: x, y: H - 8, "text-anchor": p[0] === N - 1 ? "end" : (x - m.l < 22 ? "start" : "middle"), class: "t-muted" }, lab(p[1])));
+    });
+    svg.appendChild(el("line", { x1: m.l, x2: m.l + pw, y1: m.t + ph, y2: m.t + ph, class: "axis" }));
+    const cross = el("line", { y1: m.t, y2: m.t + ph, class: "cross", visibility: "hidden" });
+    svg.appendChild(cross);
+    const hit = el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "transparent" });
+    function onMove(ev) {
+      const r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * (W / r.width);
+      let i = Math.round((x - m.l) / step - 0.5);
+      i = Math.max(0, Math.min(N - 1, i));
+      cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("visibility", "visible");
+      state.hover = i < hist.length ? off + i : D.hist.length + (i - hist.length);
+      setReadout(state.hover, q);
+    }
+    hit.addEventListener("pointermove", onMove);
+    hit.addEventListener("pointerdown", onMove);
+    hit.addEventListener("pointerleave", function () { cross.setAttribute("visibility", "hidden"); state.hover = null; setReadout(null, q); });
+    svg.appendChild(hit);
+    chartEl.replaceChildren(svg);
+    setReadout(state.hover, q);
+  }
+
+  // static text
+  document.getElementById("eyebrow").textContent = C.eyebrow;
+  document.getElementById("headline").innerHTML = C.headline;
+  document.getElementById("lede").textContent = C.lede;
+  const lim = [
+    "它只看價格和成交量，不知道新聞、財報或突發事件。如果最近的大漲大跌和消息有關，預測可能完全不成立。",
+    "頁面上的百分比是抽樣路徑的比例，不是校準過的真實機率。這類模型也常預期價格回到近期的平均水準。",
+    "這次輸入 " + C.bars + " 根 K（模型最多可讀 512 根），而且沒有針對這個標的做過回測驗證。",
+    LEVELS.length ? "拿它當「第二意見」，和技術面一起看：" + LEVELS.map(function (L) { return fp(L.p) + "（" + L.label + "）"; }).join("、") + "。"
+                  : "拿它當「第二意見」，和技術面的支撐、壓力一起看。",
+  ];
+  document.getElementById("limits").innerHTML = lim.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+  const mdesc = keys.map(function (k) { return (NAMES[k] || k) + " " + D.paths[k].length + " 條"; }).join("、");
+  document.getElementById("method").innerHTML =
+    "<div>資料：" + esc(C.sourceLabel) + "，" + esc(C.dataRange) + "，共 " + C.bars + " 根" + (/^\d/.test(C.intervalLabel) ? " " : "") + esc(C.intervalLabel) + "。預測接下來 " + D.dates.length + " 根（" + lab(D.dates[0]) + "–" + lab(D.dates[D.dates.length - 1]) + "）。</div>" +
+    "<div>模型：" + esc(mdesc) + " 抽樣路徑（Tokenizer-base，T = " + C.temperature + "，top_p = " + C.top_p + "），於 " + esc(C.created) + " 產生。</div>" +
+    (LEVELS.length ? "<div>關鍵價位：" + LEVELS.map(function (L) { return fp(L.p) + " " + esc(L.label); }).join("；") + "。</div>" : "") +
+    '<div>報告產生工具：<a href="https://github.com/ShabiSung/raco-forecast" target="_blank" rel="noopener">Raco AI 預測</a>‧預測模型：<a href="https://github.com/shiyu-coder/Kronos" target="_blank" rel="noopener">Kronos</a>（開源，MIT 授權）</div>' +
+    '<p class="disclaimer">本頁為 AI 模型研究與教學示範，不構成任何投資建議。模型預測可能完全錯誤，交易前請自行評估風險並設定停損。</p>';
+  if (!LEVELS.length) document.getElementById("t-levels-wrap").hidden = true;
+
+  const seg = document.getElementById("model-seg");
+  Object.keys(MODELS).forEach(function (k, i) {
+    const b = document.createElement("button");
+    b.type = "button"; b.id = "m-" + k; b.dataset.model = k; b.textContent = MODELS[k].name;
+    b.setAttribute("aria-pressed", String(i === 0));
+    seg.appendChild(b);
+  });
+  if (Object.keys(MODELS).length < 2) seg.hidden = true;
+  chartEl.dataset.conv = state.conv;
+  document.querySelector('[data-conv="' + state.conv + '"]').setAttribute("aria-pressed", "true");
+  function bindSeg(selector, key, attr) {
+    document.querySelectorAll(selector).forEach(function (b) {
+      b.addEventListener("click", function () {
+        state[key] = b.dataset[attr];
+        document.querySelectorAll(selector).forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+        if (key === "conv") chartEl.dataset.conv = state.conv;
+        render();
+      });
+    });
+  }
+  bindSeg("[data-model]", "model", "model");
+  bindSeg("[data-conv]", "conv", "conv");
+  document.getElementById("t-paths").addEventListener("change", function (e) { state.paths = e.target.checked; render(); });
+  document.getElementById("t-levels").addEventListener("change", function (e) { state.levels = e.target.checked; render(); });
+  let lastW = 0;
+  try { if (window.ResizeObserver) new ResizeObserver(function () { const w = chartEl.clientWidth; if (Math.abs(w - lastW) > 2) { lastW = w; render(); } }).observe(chartEl); } catch (e) {}
+  render();
+})();
+</script>
