@@ -89,7 +89,34 @@ python3 $SKILL/scripts/setup_raco.py --models small   # 只裝 small，比較快
 - **進度**：腳本每 10 條路徑印一次進度和預估剩餘時間。這段等待最適合講「抽樣路徑」的觀念（教學第 4 段）。
 - **硬體**：預設自動選硬體，有 NVIDIA GPU 用 cuda，Apple 晶片用 mps，其他用 cpu。mps 出錯時加 `--device cpu`。
 
-## 步驟 4：決定關鍵價位
+## 步驟 4：收集模型看不到的資訊
+
+模型只看價格和成交量。這一步把大盤、法人和事件補進報告，讓綜合判讀有依據。
+
+### 4-1. 先確認近期事件
+
+這支腳本抓不到財報日和法說會，要先自己查：
+- **美股**：用網路搜尋確認下一次財報日，以及是盤前還是盤後公布，例如「NVIDIA Q3 earnings date」。
+- **台股**：腳本會自動查證交所的除權除息預告。法說會、月營收公布日如果使用者在意，再用網路搜尋。
+- **加密貨幣**：通常沒有，使用者提到的重大事件（例如升息決議）再加。
+- **沒有搜尋工具時**：問使用者知不知道近期的財報日；不知道就不加，並在綜合判讀寫「財報日未確認」。
+- 只放查得到可靠來源的日期，不要猜。
+
+### 4-2. 執行
+
+```bash
+python3 $SKILL/scripts/fetch_context.py --data data.csv --symbol 0050 -o context.json
+python3 $SKILL/scripts/fetch_context.py --data data.csv --symbol NVDA --index ^GSPC,^IXIC,^SOX \
+    --events "2026-11-17:財報（美股盤後）" -o context.json
+```
+
+- **大盤**：台股自動用加權指數。美股預設 S&P 500 和那斯達克；半導體股加 `^SOX`。加密貨幣預設用比特幣當參考。
+- **三大法人**：只有台股有。抓這檔最近 10 個交易日，外加整體市場的買賣超金額。每次請求間隔 3 秒，大約 1 分鐘。
+- **當天的法人資料**：證交所通常下午 3 點到 4 點半之間才公布，還沒公布時會先用到前一個交易日，並出現在 `warnings`。
+- **事件的短標**：圖上只放得下 6 個字。說明比較長時用「日期:說明|短標」，例如 `"11/18:輝達財報後首個交易日|輝達財報"`。
+- **讀摘要 JSON**：看 `indices`（漲跌幅、均線、趨勢、和大盤比強弱 `rel20`）、`institutional`（`sum5`、`sum_all`、外資連續買賣超天數）、`events` 和 `warnings`。寫綜合判讀時，數字一律從這裡引用。
+
+## 步驟 5：決定關鍵價位
 
 報告會標出 2–4 條關鍵價位，「站上壓力的比例」和「過程中跌破支撐的比例」都是用這些價位算的。
 
@@ -104,13 +131,48 @@ python3 $SKILL/scripts/setup_raco.py --models small   # 只裝 small，比較快
 
 格式是 `--levels "97.15:缺口上緣;91.8:頸線（7/29 低點）;87.55:11/6 低點"`。說明文字要寫出這個價位的由來。
 
-## 步驟 5：產生並交付報告
+## 步驟 6：產生報告、寫綜合判讀、交付
+
+### 6-1. 先產生一次，拿到統計數字
 
 ```bash
 python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
     --name 元大台灣50 --symbol 0050 --source-label 臺灣證券交易所 \
-    --levels "97.15:缺口上緣;91.8:頸線" -o report.html
+    --levels "97.15:缺口上緣;91.8:頸線" --context context.json -o report.html
 ```
+
+### 6-2. 寫綜合判讀
+
+讀完統計 JSON 和 context 摘要，寫一個 `analysis.json`：
+
+```json
+{
+  "summary": "一句話結論，30–50 字",
+  "points": ["3–5 點，每點講一個面向，並引用一個具體數字"],
+  "watch": ["2–3 個接下來要看的價位或事件"]
+}
+```
+
+`points` 依序涵蓋這幾個面向，沒有資料的就跳過：
+1. **模型怎麼看**：中位數、收高比例；兩個模型意見不同時要寫出來。
+2. **大盤**：趨勢、近 20 日漲跌，以及這檔比大盤強還是弱（`rel20`）。
+3. **法人**（台股）：外資、投信近 5 日和近 10 日的方向，外資連續買賣超幾天。
+4. **事件**：預測期間有沒有財報、除息等事件，落在第幾根。
+5. **訊號一不一致**：模型偏多但大盤和法人偏空這類矛盾，要明講，並說明哪一邊比較值得重視、為什麼。
+
+寫作規則：
+- 數字只能來自統計 JSON、context 摘要，或你在 4-1 查到並附來源的資訊。
+- 不建議買賣、不給目標價、不說「一定」。可以寫「站回 xx 之前偏保守看待」這類條件式的觀察。
+- 預測期間有事件時，`summary` 要提到它。
+- 用白話寫給學員看，每點不超過 60 字。
+
+### 6-3. 加上判讀再產生一次
+
+```bash
+python3 $SKILL/scripts/build_report.py ...（同上參數） --context context.json --analysis analysis.json -o report.html
+```
+
+報告會多出三塊：最上方的事件警示（預測期間有事件時，圖上也會標出那一天）、綜合判讀、大盤與資金。
 
 參數說明：
 - **K 棒顏色**：台股代號會自動用紅漲綠跌、成交量換算成張，其他標的用綠漲紅跌。要改就用 `--conv`、`--volume-unit`。
@@ -122,7 +184,7 @@ python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
 2. **沒有的話**：告訴使用者 `report.html` 的完整路徑，請他用瀏覽器打開（雙擊檔案即可）。檔案是單一 HTML，可以直接傳給別人。
 3. **如果你能看圖**：發布前截一次圖確認圖表正常，有明顯問題修正一次就好。
 
-## 步驟 6：回覆格式
+## 步驟 7：回覆格式
 
 ```
 **Raco 的市場預測 AI：<名稱>（<代號>）未來 <N> 根 <K 線週期>**
@@ -138,6 +200,9 @@ python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
 - 路徑最低點的中位數出現在第 x 根，約 xx.xx：<解讀是否先回測>
 - 報告：<artifact 連結或檔案路徑>
 
+**事件**：<預測期間的財報、除息等，落在第幾根；沒有就寫「預測期間沒有已知事件」>
+**大盤與法人**：<大盤趨勢、這檔比大盤強或弱；台股加上法人近 5 日方向>
+**綜合判讀**：<analysis.json 的 summary>
 **怎麼解讀**：2–3 句，用使用者的數字講（參考 teaching.md 第 5 段）。
 **模型的限制**：看不到新聞、機率是抽樣比例、沒有對這檔做過回測驗證。
 **下一步可以做**：1–2 個延伸建議。
@@ -165,6 +230,7 @@ python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
 | 模型下載失敗（Hugging Face） | 確認能開 huggingface.co；有防火牆或 proxy 時請使用者處理網路設定 |
 | 證交所某些月份下載失敗 | 腳本會只用最近連續的月份並發出警告；稍後重跑可補齊 |
 | Yahoo 回 429 | 流量限制，稍後再試，或請使用者匯出 CSV |
+| 三大法人顯示前一天的資料 | 當天的資料證交所還沒公布，下午 4 點半以後再跑一次 `fetch_context.py` |
 | `mps` 相關錯誤（Mac） | `forecast.py` 加 `--device cpu` |
 | 預測太慢 | 減少路徑數（`--samples 50`）、只跑 small，或縮短 `--pred-len` |
 
@@ -173,6 +239,7 @@ python3 $SKILL/scripts/build_report.py --data data.csv --result result.json \
 - `scripts/setup_raco.py`：安裝執行環境（PyTorch、模型程式碼與權重），並做測試預測
 - `scripts/fetch_data.py`：下載或整理 K 線資料，輸出標準 CSV；台股會自動還原股票分割
 - `scripts/forecast.py`：產生抽樣路徑
+- `scripts/fetch_context.py`：抓大盤走勢、三大法人（台股）和除權除息預告，整理成 context.json
 - `scripts/build_report.py`：把結果做成互動 HTML 報告，並輸出統計 JSON
 - `assets/report_template.html`：報告樣板
 - `references/teaching.md`：第一次使用的教學腳本

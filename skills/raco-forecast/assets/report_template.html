@@ -9,7 +9,7 @@
   --bg: #f2f4f7; --surface: #ffffff; --ink: #16212c; --muted: #5c6a77; --line: #dfe4ea; --grid: #ebeef2;
   --accent: #2e58cf; --band-wide: rgba(46, 88, 207, 0.12); --band-mid: rgba(46, 88, 207, 0.24); --path: rgba(46, 88, 207, 0.20);
   --lv-a: #b06f12; --lv-b: #c23b2f; --lv-c: #6a7684; --lv-d: #0f8a8a;
-  --red: #d4433a; --green: #138a59; --chip: #e8edf8;
+  --red: #d4433a; --green: #138a59; --chip: #e8edf8; --warn: #9a5a00; --warn-bg: #fff4e0; --warn-line: #f0cf95;
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
@@ -18,6 +18,7 @@
     --bg: #0d1218; --surface: #141b23; --ink: #e3e8ee; --muted: #93a0ad; --line: #26303b; --grid: #1c252f;
     --accent: #7fa2ff; --band-wide: rgba(127, 162, 255, 0.13); --band-mid: rgba(127, 162, 255, 0.27); --path: rgba(127, 162, 255, 0.24);
     --lv-a: #e2a54a; --lv-b: #f06b5f; --lv-c: #8c98a5; --lv-d: #3fc6c6; --red: #f0625a; --green: #2fbf86; --chip: #1d2735;
+    --warn: #f0b45a; --warn-bg: #2a2114; --warn-line: #5a4320;
     color-scheme: dark;
   }
 }
@@ -25,8 +26,10 @@
   --bg: #0d1218; --surface: #141b23; --ink: #e3e8ee; --muted: #93a0ad; --line: #26303b; --grid: #1c252f;
   --accent: #7fa2ff; --band-wide: rgba(127, 162, 255, 0.13); --band-mid: rgba(127, 162, 255, 0.27); --path: rgba(127, 162, 255, 0.24);
   --lv-a: #e2a54a; --lv-b: #f06b5f; --lv-c: #8c98a5; --lv-d: #3fc6c6; --red: #f0625a; --green: #2fbf86; --chip: #1d2735;
+  --warn: #f0b45a; --warn-bg: #2a2114; --warn-line: #5a4320;
   color-scheme: dark;
 }
+[hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.65; }
 .wrap {
   max-width: 1080px; margin: 0 auto; padding-block: 28px 40px;
@@ -94,6 +97,52 @@ svg .median { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linej
 svg .path { fill: none; stroke: var(--path); stroke-width: 1; }
 svg .dot { fill: var(--accent); }
 svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+
+/* events */
+.alert { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 12px 16px; color: var(--ink); }
+.alert svg { width: 22px; height: 22px; color: var(--warn); margin-top: 1px; }
+.alert b.t { color: var(--warn); }
+.alert ul { margin: 4px 0 0; padding-left: 1.1em; display: grid; gap: 2px; }
+svg .ev { stroke: var(--warn); stroke-width: 1.3; stroke-dasharray: 2 3; }
+svg .t-ev { fill: var(--warn); font-weight: 700; }
+/* colors that follow the 紅漲綠跌 toggle outside the chart */
+.wrap[data-colors="tw"] { --up-c: var(--red); --down-c: var(--green); }
+.wrap[data-colors="us"] { --up-c: var(--green); --down-c: var(--red); }
+.pos { color: var(--up-c); } .neg { color: var(--down-c); }
+/* analysis */
+.analysis .head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.analysis .head h2 { margin: 0; }
+.by { font-size: 12px; color: var(--muted); background: var(--chip); border-radius: 999px; padding: 1px 10px; }
+.verdict { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.55; max-width: 62ch; text-wrap: pretty; }
+.analysis ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.analysis li { max-width: 70ch; }
+.analysis h3 { margin: 4px 0 0; font-size: 14px; color: var(--muted); font-weight: 700; }
+.fine { margin: 0; font-size: 12.5px; color: var(--muted); }
+/* market + money */
+.ctx-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.ctx-head h2 { margin: 0; }
+.ctx-head span { font-size: 12.5px; color: var(--muted); }
+.ctx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card .nm { font-weight: 700; }
+.pill { font-size: 12px; font-weight: 700; padding: 1px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.flat { color: var(--muted); }
+.card .big { font-family: var(--font-num); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.card .big small { font-size: 13px; margin-left: 8px; }
+.card .row { font-size: 13px; color: var(--muted); }
+.card .row b { font-weight: 600; }
+.spark { width: 100%; height: 48px; display: block; }
+.spark .ln { fill: none; stroke: var(--ink); stroke-width: 1.4; vector-effect: non-scaling-stroke; opacity: 0.8; }
+.spark .ma { fill: none; stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.bars { width: 100%; height: 64px; display: block; }
+.bars .b-pos { fill: var(--up-c); opacity: 0.75; } .bars .b-neg { fill: var(--down-c); opacity: 0.75; }
+.bars .zero { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+table.inst { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.inst th, table.inst td { padding: 3px 0; text-align: right; font-variant-numeric: tabular-nums; }
+table.inst th:first-child, table.inst td:first-child { text-align: left; color: var(--muted); font-weight: 400; }
+table.inst thead th { color: var(--muted); font-weight: 400; border-bottom: 1px solid var(--line); }
+table.inst tr.sum td { border-top: 1px solid var(--line); font-weight: 700; }
 @media (max-width: 760px) {
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .notes { grid-template-columns: 1fr; }
@@ -102,12 +151,17 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
 @media (prefers-reduced-motion: no-preference) { .seg button { transition: background-color 0.15s ease; } }
 </style>
 
-<div class="wrap">
+<div class="wrap" id="wrap">
   <header>
     <div class="eyebrow" id="eyebrow"></div>
     <h1 id="headline"></h1>
     <p class="lede" id="lede"></p>
   </header>
+
+  <section class="alert" id="alerts" role="note" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+    <div id="alerts-body"></div>
+  </section>
 
   <section class="panel" aria-label="預測圖">
     <div class="controls">
@@ -130,6 +184,20 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
   </section>
 
   <section class="stats" id="stats" aria-label="預測統計"></section>
+
+  <section class="panel analysis" id="analysis" hidden>
+    <div class="head"><h2>綜合判讀</h2><span class="by">Claude 整理，不是模型輸出</span></div>
+    <p class="verdict" id="an-summary"></p>
+    <ul id="an-points"></ul>
+    <h3 id="an-watch-h">接下來觀察</h3>
+    <ul id="an-watch"></ul>
+    <p class="fine">這段由 Claude 綜合模型預測、大盤、法人與事件整理，判斷可能出錯，不構成投資建議。</p>
+  </section>
+
+  <section id="ctx" hidden>
+    <div class="ctx-head"><h2>大盤與資金</h2><span id="ctx-asof"></span></div>
+    <div class="ctx-grid" id="ctx-grid"></div>
+  </section>
 
   <section class="notes">
     <div class="panel">
@@ -160,6 +228,9 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
   const daily = C.interval.indexOf("1d") === 0;
   const LEVELS = (C.levels || []).map(function (L, i) { return { p: L.p, label: L.label, cls: "abcd"[i % 4] }; });
   const NAMES = { small: "小模型", base: "大模型" };
+  const EVENTS = C.events || [];
+  const CTX = C.context || null;
+  const AN = C.analysis || null;
   const MODELS = {};
   const keys = Object.keys(D.paths);
   if (keys.length > 1) {
@@ -320,6 +391,11 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
         svg.appendChild(el("text", { x: m.l + 4, y: Y(L.p) - 4, class: "t-" + L.cls + " t-cjk halo" }, fp(L.p) + " " + L.label));
       });
     }
+    EVENTS.filter(function (e) { return e.when === "in"; }).forEach(function (e, j) {
+      const x = X(hist.length + e.idx);
+      svg.appendChild(el("line", { x1: x, x2: x, y1: m.t + 18 + j * 14, y2: m.t + ph, class: "ev" }));
+      svg.appendChild(el("text", { x: x, y: m.t + 28 + j * 14, "text-anchor": x > m.l + pw - 40 ? "end" : "middle", class: "t-ev t-cjk halo" }, e.short));
+    });
     const xl = [];
     for (let i = 0; i < hist.length; i += narrow ? 10 : 15) xl.push([i, hist[i][0]]);
     xl.push([hist.length - 1, hist[hist.length - 1][0]]);
@@ -373,6 +449,81 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
     '<p class="disclaimer">本頁為 AI 模型研究與教學示範，不構成任何投資建議。模型預測可能完全錯誤，交易前請自行評估風險並設定停損。</p>';
   if (!LEVELS.length) document.getElementById("t-levels-wrap").hidden = true;
 
+
+  // events, analysis, market + money
+  function md(s) { const d = new Date(s + "T00:00:00"); return (d.getMonth() + 1) + "/" + String(d.getDate()).padStart(2, "0") + "（" + WD[d.getDay()] + "）"; }
+  function sgn(v, unit) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toLocaleString("en-US") + (unit || ""); }
+  function cls(v) { return v > 0 ? "pos" : v < 0 ? "neg" : ""; }
+  // 中英文交界補空格：cat("輝達", "近 20 日比", "S&P 500", "弱") → 輝達近 20 日比 S&P 500 弱
+  function cat() {
+    const isA = function (ch) { return /[A-Za-z0-9&%.)]/.test(ch); }, isC = function (ch) { return /[\u3400-\u9fff]/.test(ch); };
+    return Array.prototype.reduce.call(arguments, function (acc, part) {
+      if (!acc) return part;
+      const a = acc[acc.length - 1], b = part[0];
+      return acc + ((isA(a) && isC(b)) || (isC(a) && isA(b)) ? " " : "") + part;
+    }, "");
+  }
+  if (EVENTS.length) {
+    const items = EVENTS.map(function (e) {
+      const when = e.when === "in" ? "落在預測第 " + (e.idx + 1) + " 根（" + lab(D.dates[e.idx]) + "）。事件之後的預測，參考價值很低。"
+        : e.when === "after" ? "在這次預測的範圍之後。" : "剛發生，最近的 K 線已經反映一部分。";
+      return "<li><b>" + md(e.date) + " " + esc(e.label) + "</b>：" + when + "</li>";
+    });
+    const inWin = EVENTS.some(function (e) { return e.when === "in"; });
+    document.getElementById("alerts-body").innerHTML = '<b class="t">' + (inWin ? "預測期間有模型看不到的重大事件" : "近期事件") + "</b><ul>" + items.join("") + "</ul>";
+    document.getElementById("alerts").hidden = false;
+  }
+  if (AN && AN.summary) {
+    document.getElementById("an-summary").textContent = AN.summary;
+    document.getElementById("an-points").innerHTML = (AN.points || []).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+    const w = AN.watch || [];
+    document.getElementById("an-watch").innerHTML = w.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+    document.getElementById("an-watch-h").hidden = !w.length;
+    document.getElementById("analysis").hidden = false;
+  }
+  function sparkSvg(vals, extra) {
+    const lo = Math.min.apply(null, vals.concat(extra || [])), hi = Math.max.apply(null, vals.concat(extra || [])), n = vals.length;
+    const y = function (v) { return 46 - (v - lo) / ((hi - lo) || 1) * 42; }, x = function (i) { return i / (n - 1) * 240; };
+    const ma = [];
+    for (let i = 19; i < n; i++) { let t = 0; for (let k = i - 19; k <= i; k++) t += vals[k]; ma.push([i, t / 20]); }
+    return '<svg class="spark" viewBox="0 0 240 48" preserveAspectRatio="none" role="img" aria-label="近 60 日走勢與 20 日均線">' +
+      '<path class="ln" d="' + vals.map(function (v, i) { return (i ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1); }).join("") + '"/>' +
+      (ma.length > 1 ? '<path class="ma" d="' + ma.map(function (p, i) { return (i ? "L" : "M") + x(p[0]).toFixed(1) + "," + y(p[1]).toFixed(1); }).join("") + '"/>' : "") + "</svg>";
+  }
+  function pctSpan(v) { return v == null ? "—" : '<b class="' + cls(v) + '">' + (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2) + "%</b>"; }
+  if (CTX && ((CTX.indices || []).length || CTX.institutional)) {
+    const cards = [];
+    (CTX.indices || []).forEach(function (ix) {
+      const pill = ix.trend === "多頭排列" ? "pos" : ix.trend === "空頭排列" ? "neg" : "flat";
+      const nd = ix.last >= 1000 ? 0 : 2, f = function (v) { return v.toLocaleString("en-US", { minimumFractionDigits: nd, maximumFractionDigits: nd }); };
+      const ma = "收盤" + (ix.above_ma20 ? "站上" : "跌破") + " 20 日線 " + f(ix.ma20) + (ix.ma60 ? "，" + (ix.above_ma60 ? "站上" : "跌破") + " 60 日線 " + f(ix.ma60) : "");
+      const rel = ix.rel20 == null ? "" : '<div class="row">' + esc(cat(C.name, "近 20 日比", ix.name, ix.rel20 >= 0 ? "強" : "弱")) + ' <b class="' + cls(ix.rel20) + '">' + Math.abs(ix.rel20).toFixed(1) + "</b> 個百分點</div>";
+      cards.push('<div class="card"><div class="top"><span class="nm">' + esc(ix.name) + '</span><span class="pill ' + pill + '">' + esc(ix.trend) + "</span></div>" +
+        '<div class="big">' + f(ix.last) + "<small>" + pctSpan(ix.chg1) + "</small></div>" +
+        '<div class="row">5 日 ' + pctSpan(ix.chg5) + "　20 日 " + pctSpan(ix.chg20) + "</div>" +
+        sparkSvg(ix.spark.close) + '<div class="row">' + ma + "</div>" + rel + "</div>");
+    });
+    const I = CTX.institutional;
+    if (I) {
+      const days = I.days, mx = Math.max.apply(null, days.map(function (d) { return Math.abs(d.total); })) || 1, bw = 240 / days.length;
+      const bars = days.map(function (d, i) {
+        const h = Math.abs(d.total) / mx * 28, y = d.total >= 0 ? 32 - h : 32;
+        return '<rect class="' + (d.total >= 0 ? "b-pos" : "b-neg") + '" x="' + (i * bw + bw * 0.18).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw * 0.64).toFixed(1) + '" height="' + Math.max(0.8, h).toFixed(1) + '"><title>' + d.date.slice(5).replace("-", "/") + " 合計 " + sgn(d.total, " 張") + "</title></rect>";
+      }).join("");
+      const rowsT = [["外資", "foreign"], ["投信", "trust"], ["自營商", "dealer"], ["合計", "total"]].map(function (r) {
+        return "<tr" + (r[1] === "total" ? ' class="sum"' : "") + "><td>" + r[0] + '</td><td class="num ' + cls(I.sum5[r[1]]) + '">' + sgn(I.sum5[r[1]]) + '</td><td class="num ' + cls(I.sum_all[r[1]]) + '">' + sgn(I.sum_all[r[1]]) + "</td></tr>";
+      }).join("");
+      const st = I.foreign_streak && I.foreign_streak.days ? '<div class="row">外資連續 <b>' + I.foreign_streak.days + "</b> 天" + esc(I.foreign_streak.direction) + "</div>" : "";
+      const F = CTX.market_flows;
+      const mf = F ? '<div class="row">整體市場 ' + md(F.date) + "：外資 " + '<b class="' + cls(F.foreign) + '">' + sgn(F.foreign, " 億") + "</b>、投信 " + '<b class="' + cls(F.trust) + '">' + sgn(F.trust, " 億") + "</b>、自營商 " + '<b class="' + cls(F.dealer) + '">' + sgn(F.dealer, " 億") + "</b></div>" : "";
+      cards.push('<div class="card"><div class="top"><span class="nm">三大法人買賣超（張）</span><span class="row">' + days[0].date.slice(5).replace("-", "/") + "–" + days[days.length - 1].date.slice(5).replace("-", "/") + "</span></div>" +
+        '<svg class="bars" viewBox="0 0 240 64" preserveAspectRatio="none" role="img" aria-label="每日三大法人合計買賣超"><line class="zero" x1="0" x2="240" y1="32" y2="32"/>' + bars + "</svg>" +
+        '<table class="inst"><thead><tr><th></th><th>近 5 日</th><th>近 ' + I.n + " 日</th></tr></thead><tbody>" + rowsT + "</tbody></table>" + st + mf + "</div>");
+    }
+    document.getElementById("ctx-grid").innerHTML = cards.join("");
+    document.getElementById("ctx-asof").textContent = "資料截至 " + md(CTX.asof) + (CTX.market === "tw" ? "，買超為正" : "");
+    document.getElementById("ctx").hidden = false;
+  }
   const seg = document.getElementById("model-seg");
   Object.keys(MODELS).forEach(function (k, i) {
     const b = document.createElement("button");
@@ -382,13 +533,14 @@ svg .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stro
   });
   if (Object.keys(MODELS).length < 2) seg.hidden = true;
   chartEl.dataset.conv = state.conv;
+  document.getElementById("wrap").dataset.colors = state.conv;
   document.querySelector('[data-conv="' + state.conv + '"]').setAttribute("aria-pressed", "true");
   function bindSeg(selector, key, attr) {
     document.querySelectorAll(selector).forEach(function (b) {
       b.addEventListener("click", function () {
         state[key] = b.dataset[attr];
         document.querySelectorAll(selector).forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
-        if (key === "conv") chartEl.dataset.conv = state.conv;
+        if (key === "conv") { chartEl.dataset.conv = state.conv; document.getElementById("wrap").dataset.colors = state.conv; }
         render();
       });
     });

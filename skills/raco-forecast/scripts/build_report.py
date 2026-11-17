@@ -81,6 +81,34 @@ def interval_words(interval):
     return (f"{mins} 分鐘 K" if mins else "K 線"), "根 K"
 
 
+def place_events(evts, rows, fut_dates):
+    """把事件對到預測的第幾根：in＝在預測期間內，after＝預測期間之後，past＝最近 5 根內剛發生。"""
+    out = []
+    fut = [d[:10] for d in fut_dates]
+    last_d = rows[-1][0][:10]
+    recent_start = rows[-5][0][:10] if len(rows) >= 5 else rows[0][0][:10]
+    for e in evts:
+        d = e["date"][:10]
+        short = e.get("short") or e["label"].split("（")[0].split("(")[0].strip() or "事件"
+        short = short if len(short) <= 6 else short[:5] + "…"
+        if d <= last_d:
+            if d >= recent_start:
+                out.append({**e, "short": short, "when": "past", "idx": None})
+            continue
+        idx = next((i for i, f in enumerate(fut) if f >= d), None)
+        out.append({**e, "short": short, "when": "in" if idx is not None else "after", "idx": idx})
+    return out
+
+
+def load_analysis(path):
+    an = json.load(open(path, encoding="utf-8"))
+    if not isinstance(an, dict) or not isinstance(an.get("summary"), str):
+        sys.exit("--analysis 的 JSON 要有 summary（字串），points、watch 是字串清單")
+    for k in ("points", "watch"):
+        an[k] = [str(x) for x in an.get(k, [])]
+    return {k: an[k] for k in ("summary", "points", "watch")}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--data", required=True)
@@ -95,6 +123,8 @@ def main():
     ap.add_argument("--hist-bars", type=int, default=60, help="報告裡顯示幾根歷史 K（預設 60）")
     ap.add_argument("--headline", default=None, help="自訂標題（可用 <em>重點</em> 標示強調）")
     ap.add_argument("--lede", default=None, help="自訂標題下的說明")
+    ap.add_argument("--context", default=None, help="fetch_context.py 產生的 context.json（大盤、三大法人、事件）")
+    ap.add_argument("--analysis", default=None, help="Claude 寫的綜合判讀 JSON：{\"summary\": ..., \"points\": [...], \"watch\": [...]}")
     ap.add_argument("-o", "--out", required=True)
     a = ap.parse_args()
 
@@ -131,6 +161,9 @@ def main():
     sp = " " if interval_label[0].isdigit() else ""
     lede = a.lede or (f"Raco 的市場預測 AI 專門讀 K 線。它看完{a.name}（{a.symbol}）最近 {meta['bars_used']} 根{sp}{interval_label}，"
                       f"產生 {len(pooled)} 條「可能的未來」，下面的圖把這些路徑整理成區間。每條路徑都只是一種可能，不是預言。")
+    ctx = json.load(open(a.context, encoding="utf-8")) if a.context else None
+    analysis = load_analysis(a.analysis) if a.analysis else None
+    events = place_events(ctx.get("events", []) if ctx else [], rows, res["dates"])
     hist = rows[-a.hist_bars:]
     first_d, last_d = meta["first"][:10].replace("-", "/"), meta["last"][:10].replace("-", "/")
     cfg = {
@@ -138,7 +171,7 @@ def main():
         "intervalLabel": interval_label, "sourceLabel": a.source_label, "dataRange": f"{first_d}–{last_d}",
         "bars": meta["bars_used"], "levels": [{"p": p, "label": t} for p, t in levels],
         "headline": headline, "lede": lede, "temperature": meta["temperature"], "top_p": meta["top_p"],
-        "created": meta["created"],
+        "created": meta["created"], "context": ctx, "events": events, "analysis": analysis,
         "eyebrow": f"{a.name}（{a.symbol}）‧Raco 的市場預測 AI‧{interval_label}‧資料截至 {meta['last'][:16] if 'd' not in meta['interval'] else last_d}",
     }
     data = {"hist": [[r[0][:16]] + [round(x, 6) for x in r[1:]] for r in hist], "dates": res["dates"], "paths": paths}
@@ -149,7 +182,8 @@ def main():
     with open(a.out, "w", encoding="utf-8") as f:
         f.write(page)
     print(json.dumps({"out": os.path.abspath(a.out), "last_close": last, "pred_len": n, "unit": unit_word,
-                      "headline_phrase": phrase, "levels": levels, "stats": st}, ensure_ascii=False, indent=1))
+                      "headline_phrase": phrase, "levels": levels, "events": events,
+                      "analysis_included": bool(analysis), "stats": st}, ensure_ascii=False, indent=1))
 
 
 if __name__ == "__main__":
