@@ -442,7 +442,8 @@ table.inst tr.sum td { border-top: 1px solid var(--line); font-weight: 700; }
   document.getElementById("limits").innerHTML = lim.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
   const mdesc = keys.map(function (k) { return (NAMES[k] || k) + " " + D.paths[k].length + " 條"; }).join("、");
   document.getElementById("method").innerHTML =
-    "<div>資料：" + esc(C.sourceLabel) + "，" + esc(C.dataRange) + "，共 " + C.bars + " 根" + (/^\d/.test(C.intervalLabel) ? " " : "") + esc(C.intervalLabel) + "。預測接下來 " + D.dates.length + " 根（" + lab(D.dates[0]) + "–" + lab(D.dates[D.dates.length - 1]) + "）。</div>" +
+    "<div>資料：" + esc(C.sourceLabel) + "，" + esc(C.dataRange) + "，共 " + C.bars + " 根" + (/^\d/.test(C.intervalLabel) ? " " : "") + esc(C.intervalLabel) + "。預測接下來 " + D.dates.length + " 根（" + lab(D.dates[0]) + "–" + lab(D.dates[D.dates.length - 1]) + "）。" +
+    ((C.skipped || []).length ? "已排除休市日：" + C.skipped.map(function (s) { return lab(s[0]) + " " + esc(s[1]); }).join("、") + "。" : "") + "</div>" +
     "<div>模型：" + esc(mdesc) + " 抽樣路徑（T = " + C.temperature + "，top_p = " + C.top_p + "），於 " + esc(C.created) + " 產生。</div>" +
     (LEVELS.length ? "<div>關鍵價位：" + LEVELS.map(function (L) { return fp(L.p) + " " + esc(L.label); }).join("；") + "。</div>" : "") +
     '<div>報告產生工具：<a href="https://github.com/ShabiSung/raco-forecast" target="_blank" rel="noopener">Raco 的市場預測 AI</a></div>' +

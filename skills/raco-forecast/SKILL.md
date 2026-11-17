@@ -87,6 +87,7 @@ python3 $SKILL/scripts/setup_raco.py --models small   # 只裝 small，比較快
 - **預設**：使用者沒指定時，跑 `--models small --samples 100`，大約 3–6 分鐘。使用者想比較模型時才加 base。
 - **預測長度**：日 K 的 20 根約一個月。使用者說「下週」就用 5，「下個月」就用 20。
 - **進度**：腳本每 10 條路徑印一次進度和預估剩餘時間。這段等待最適合講「抽樣路徑」的觀念（教學第 4 段）。
+- **休市日**：預測日期會自動跳過休市日。腳本會從歷史資料判斷是台股還是美股，也可以直接指定 `--market tw` 或 `--market us`。台股的休市日來自證交所公告，美股照紐約證交所的規則計算；颱風這類臨時休市沒辦法事先排除。
 - **硬體**：預設自動選硬體，有 NVIDIA GPU 用 cuda，Apple 晶片用 mps，其他用 cpu。mps 出錯時加 `--device cpu`。
 
 ## 步驟 4：收集模型看不到的資訊
@@ -239,6 +240,7 @@ python3 $SKILL/scripts/build_report.py ...（同上參數） --context context.j
 - `scripts/setup_raco.py`：安裝執行環境（PyTorch、模型程式碼與權重），並做測試預測
 - `scripts/fetch_data.py`：下載或整理 K 線資料，輸出標準 CSV；台股會自動還原股票分割
 - `scripts/forecast.py`：產生抽樣路徑
+- `scripts/market_calendar.py`：台股、美股的休市日（預測日期用）
 - `scripts/fetch_context.py`：抓大盤走勢、三大法人（台股）和除權除息預告，整理成 context.json
 - `scripts/build_report.py`：把結果做成互動 HTML 報告，並輸出統計 JSON
 - `assets/report_template.html`：報告樣板

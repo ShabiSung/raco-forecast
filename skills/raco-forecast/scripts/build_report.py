@@ -171,7 +171,7 @@ def main():
         "intervalLabel": interval_label, "sourceLabel": a.source_label, "dataRange": f"{first_d}–{last_d}",
         "bars": meta["bars_used"], "levels": [{"p": p, "label": t} for p, t in levels],
         "headline": headline, "lede": lede, "temperature": meta["temperature"], "top_p": meta["top_p"],
-        "created": meta["created"], "context": ctx, "events": events, "analysis": analysis,
+        "created": meta["created"], "skipped": meta.get("skipped_holidays", []), "context": ctx, "events": events, "analysis": analysis,
         "eyebrow": f"{a.name}（{a.symbol}）‧Raco 的市場預測 AI‧{interval_label}‧資料截至 {meta['last'][:16] if 'd' not in meta['interval'] else last_d}",
     }
     data = {"hist": [[r[0][:16]] + [round(x, 6) for x in r[1:]] for r in hist], "dates": res["dates"], "paths": paths}

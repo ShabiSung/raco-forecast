@@ -61,7 +61,7 @@ Claude 會完成安裝並帶你跑第一次預測。第一次大約要 10–20 �
 
 ## 報告裡有什麼
 
-- **K 線與預測區間**：最近 60 根 K 線，接上未來每一根的中位數，以及 25–75%、10–90% 兩層區間。
+- **K 線與預測區間**：最近 60 根 K 線，接上未來每一根的中位數，以及 25–75%、10–90% 兩層區間。預測日期會跳過台股、美股的休市日。
 - **抽樣路徑**：模型每次預測都像擲一次骰子，100 條路徑代表 100 種可能的走勢。
 - **四個統計數字**：
   - 最後一根的中位數
@@ -160,6 +160,7 @@ skills/raco-forecast/
   scripts/fetch_data.py          下載或整理 K 線資料
   scripts/forecast.py            產生抽樣路徑
   scripts/fetch_context.py       抓大盤、三大法人與除權除息預告
+  scripts/market_calendar.py     台股、美股的休市日
   scripts/build_report.py        產生互動 HTML 報告
   assets/report_template.html    報告樣板
 docs/example-report.png          報告範例截圖

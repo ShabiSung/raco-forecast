@@ -1,6 +1,6 @@
 {
   "name": "raco-forecast",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Raco 的市場預測 AI：預測股票、ETF、加密貨幣走勢，Claude 會先教學，再產生互動網頁報告",
   "author": { "name": "ShabiSung" }
 }

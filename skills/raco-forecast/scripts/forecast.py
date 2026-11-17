@@ -23,21 +23,26 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import torch  # noqa: E402
 from model import Kronos, KronosPredictor, KronosTokenizer  # noqa: E402
+import market_calendar  # noqa: E402
 
 REPOS = {"small": "NeoQuasar/Kronos-small", "base": "NeoQuasar/Kronos-base"}
 TOKENIZER = "NeoQuasar/Kronos-Tokenizer-base"
 LABELS = {"small": "小模型", "base": "大模型"}
 
 
-def future_times(ts, n):
+def future_times(ts, n, market, all_ts):
+    """回傳（未來時間、K 線週期、使用的休市日曆、跳過的休市日）。"""
     diffs = ts.diff().dropna()
     med = diffs.median()
     last = ts.iloc[-1]
     if med >= pd.Timedelta(hours=20):
         if (ts.dt.day_of_week >= 5).any():          # 加密貨幣等週末也交易
-            return pd.Series(pd.date_range(last + pd.Timedelta(days=1), periods=n, freq="D")), "1d-7"
-        return pd.Series(pd.bdate_range(last + pd.Timedelta(days=1), periods=n)), "1d"
-    return pd.Series([last + med * (i + 1) for i in range(n)]), f"{int(med.total_seconds() // 60)}m"
+            return pd.Series(pd.date_range(last + pd.Timedelta(days=1), periods=n, freq="D")), "1d-7", "none", []
+        if market == "auto":
+            market = market_calendar.guess_market([t.date() for t in all_ts]) or "none"
+        days, skipped = market_calendar.next_trading_days(last.date(), n, market)
+        return pd.Series(pd.to_datetime(days)), "1d", market, skipped
+    return pd.Series([last + med * (i + 1) for i in range(n)]), f"{int(med.total_seconds() // 60)}m", "none", []
 
 
 def pick_device(name):
@@ -61,6 +66,8 @@ def main():
     ap.add_argument("--models", default="small", help="small、base，逗號分隔（預設 small）")
     ap.add_argument("--samples", default="100", help="每個模型幾條路徑，可用逗號分別指定，例如 100,50")
     ap.add_argument("--lookback", type=int, default=400, help="最多讀入幾根歷史 K（上限 512）")
+    ap.add_argument("--market", default="auto", choices=["auto", "tw", "us", "none"],
+                    help="預測日期要跳過哪個市場的休市日：tw 台股、us 美股、none 只跳過週末；auto 從歷史資料自動判斷")
     ap.add_argument("--device", default="auto", help="auto / cpu / cuda / mps")
     ap.add_argument("--temperature", type=float, default=1.0)
     ap.add_argument("--top-p", type=float, default=0.9)
@@ -81,7 +88,11 @@ def main():
     df = pd.read_csv(a.data, parse_dates=["timestamps"])
     lookback = min(a.lookback, 512, len(df))
     ctx = df.tail(lookback).reset_index(drop=True)
-    fut, interval = future_times(ctx["timestamps"], a.pred_len)
+    fut, interval, calendar, skipped = future_times(ctx["timestamps"], a.pred_len, a.market, df["timestamps"])
+    cal_name = {"tw": "台股", "us": "美股", "none": "只排除週末"}[calendar]
+    print(f"休市日曆：{cal_name}" + ("；跳過 " + "、".join(f"{d:%m/%d} {name}" for d, name in skipped) if skipped else ""), flush=True)
+    for note in market_calendar.notes:
+        print("注意：" + note, flush=True)
     x = ctx[["open", "high", "low", "close", "volume", "amount"]].astype(float)
     device = pick_device(a.device)
     tok = KronosTokenizer.from_pretrained(TOKENIZER)
@@ -92,6 +103,7 @@ def main():
             "first": ctx["timestamps"].iloc[0].strftime("%Y-%m-%d %H:%M"),
             "last": ctx["timestamps"].iloc[-1].strftime("%Y-%m-%d %H:%M"),
             "last_close": float(ctx["close"].iloc[-1]), "interval": interval, "pred_len": a.pred_len,
+            "calendar": calendar, "skipped_holidays": [[d.isoformat(), name] for d, name in skipped],
             "temperature": a.temperature, "top_p": a.top_p, "device": device,
             "engine_commit": CFG.get("engine_commit") or CFG.get("kronos_commit", ""), "created": time.strftime("%Y-%m-%d %H:%M"),
         },
